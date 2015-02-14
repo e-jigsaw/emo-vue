@@ -1,14 +1,12 @@
 gulp = require 'gulp'
 jade = require 'gulp-jade'
-coffee = require 'gulp-coffee'
-styl = require 'gulp-stylus'
+webpack = require 'gulp-webpack'
 conn = require 'gulp-connect'
 deploy = require 'gulp-gh-pages'
 
 paths =
   jade: 'src/*.jade'
-  styl: 'src/*.styl'
-  coffee: 'src/*.coffee'
+  vue: 'src/**/*.vue'
   dest: 'build/'
 
 gulp.task 'jade', ->
@@ -16,21 +14,27 @@ gulp.task 'jade', ->
     .pipe jade()
     .pipe gulp.dest(paths.dest)
 
-gulp.task 'coffee', ->
-  gulp.src paths.coffee
-    .pipe coffee()
-    .pipe gulp.dest(paths.dest)
+gulp.task 'webpack', ->
+  gulp.src 'src/index.coffee'
+    .pipe webpack
+      resolve:
+        extensions: ['', '.coffee', '.vue', '.js']
+      module:
+        loaders: [
+          test: /\.coffee$/
+          loader: 'coffee-loader'
+        ,
+          test: /\.vue$/
+          loader: 'vue'
+        ]
+      output:
+        filename: 'index.js'
+    .pipe gulp.dest paths.dest
 
-gulp.task 'styl', ->
-  gulp.src paths.styl
-    .pipe styl()
-    .pipe gulp.dest(paths.dest)
-
-gulp.task 'default', ['jade', 'styl', 'coffee']
+gulp.task 'default', ['jade', 'webpack']
 gulp.task 'watch', ['default'], ->
   gulp.watch paths.jade, ['jade']
-  gulp.watch paths.styl, ['styl']
-  gulp.watch paths.coffee, ['coffee']
+  gulp.watch paths.vue, ['webpack']
   conn.server
     root: 'build'
 
